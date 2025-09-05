@@ -1,0 +1,45 @@
+{
+  "grassTileProperties": {
+    "displayName": "grassy tile",
+    "friction": 0.1,
+    "density": 1.0,
+    "bounciness": 0.0,
+    "slowFactor": 0.9,
+    "footprint": true
+  },
+  "roadTileProperties": {
+    "displayName": "road tile",
+    "friction": 0.3,
+    "density": 1.5,
+    "bounciness": 0.0,
+    "sticky": true,
+    "slowFactor": 1.25,
+    "sound": {
+      "resource": "squirt",
+      "type": "loop"
+    }
+  },
+  "iceTileProperties": {
+    "displayName": "ice tile",
+    "friction": 0.01,
+    "density": 0.9,
+    "bounciness": 0.05,
+    "slipperiness": 1.0
+  },
+  "spikeTileProperties": {
+    "displayName": "spike tile",
+    "friction": 0.2,
+    "density": 2.0,
+    "bounciness": 0.1,
+    "hazard": true,
+    "damagePerSecond": 10
+  },
+  "conveyorTileProperties": {
+    "displayName": "right-conveyor tile",
+    "friction": 0.15,
+    "density": 1.2,
+    "bounciness": 0.0,
+    "conveyorSpeed": 1.5,
+    "conveyorDirection": "right"
+  }
+}

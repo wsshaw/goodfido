@@ -1,0 +1,6 @@
+[
+  { "path": "assets/objects/tree.json" },
+  { "path": "assets/objects/rock.json" },
+  { "path": "assets/objects/chest.json" },
+  { "path": "assets/objects/bush.json" }
+]

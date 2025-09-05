@@ -1,0 +1,341 @@
+{
+  "name": "Room 2",
+  "width": 10,
+  "height": 10,
+  "tiles": [
+    [
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      }
+    ],
+    [
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      }
+    ],
+    [
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      }
+    ],
+    [
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "water"
+      },
+      {
+        "terrain": "water"
+      },
+      {
+        "terrain": "water"
+      },
+      {
+        "terrain": "water",
+        "tileExits": {
+          "up": {
+            "roomId": 0,
+            "x": 4,
+            "y": 4
+          }
+        }
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      }
+    ],
+    [
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "water"
+      },
+      {
+        "terrain": "water"
+      },
+      {
+        "terrain": "water"
+      },
+      {
+        "terrain": "water"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      }
+    ],
+    [
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "water"
+      },
+      {
+        "terrain": "water"
+      },
+      {
+        "terrain": "water"
+      },
+      {
+        "terrain": "water"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      }
+    ],
+    [
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "water",
+        "tileExits": {
+          "right": {
+            "roomId": 0,
+            "x": 0,
+            "y": 0
+          }
+        }
+      },
+      {
+        "terrain": "water"
+      },
+      {
+        "terrain": "water"
+      },
+      {
+        "terrain": "water"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      }
+    ],
+    [
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      }
+    ],
+    [
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      }
+    ],
+    [
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      },
+      {
+        "terrain": "grass"
+      }
+    ]
+  ]
+}

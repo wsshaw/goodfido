@@ -1,0 +1,58 @@
+{
+  "grass": {
+    "src": "assets/images/grass.png"
+  },
+  "road": {
+    "src": "assets/images/road.png"
+  },
+  "water": {
+    "src": "assets/images/water.png"
+  },
+  "void": {
+    "src": "assets/images/void.png"
+  },
+  "blank": {
+    "src": "assets/images/blank.png"
+  },
+  "fido_background": {
+    "src": "assets/images/fido_background.png"
+  },
+  "stump": {
+    "src": "assets/images/stump.png",
+    "defaultAlpha": 1,
+    "defaultZ": 5
+  },
+  "wildflowers": {
+    "src": "assets/images/wildflowers.png",
+    "defaultAlpha": 0.6,
+    "defaultZ": 6
+  },
+  "lily_pad": {
+    "src": "assets/images/lily_pad.png",
+    "defaultAlpha": 0.9,
+    "defaultZ": 7
+  },
+  "obj_Boulder": {
+    "src": "assets/images/rock.png",
+    "defaultAlpha": 0.9,
+    "defaultZ": 20
+  },
+  "obj_Bush": {
+    "spriteSheet": "assets/images/small_bush_s4.png"
+  },
+  "npc_fido": {
+    "src": "assets/images/fido.png",
+    "spriteSheet": "assets/images/fido_sheet.png"
+  },
+  "npc_gregory": {
+    "src": "assets/images/gregory.png",
+    "spriteSheet": "assets/images/gregory.png"
+  },
+  "audio": {
+    "forest_ambience": ["assets/audio/forest_ambience.ogg", "assets/audio/forest_ambience.mp3"],
+    "squirt": ["assets/audio/squirt.mp3"],
+    "bark": ["assets/audio/bark.ogg"],
+    "greaser_loop": ["assets/audio/rebel.mp3"],
+    "doom_loop": ["assets/audio/doom.mp3"]
+  }
+}

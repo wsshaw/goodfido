@@ -1,0 +1,8 @@
+{
+    "id": 4,
+    "name": "Bush",
+    "sprite": "obj_Bush",
+    "animated": true,
+    "frameCount": 4,
+    "frameRate": 4
+  }

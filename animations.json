@@ -1,0 +1,18 @@
+{
+  "water_tile": {
+    "spritesheet": "tiles/water.png",
+    "frameWidth": 32,
+    "frameHeight": 32,
+    "frameCount": 4,
+    "frameDuration": 200,
+    "loop": true
+  },
+  "campfire": {
+    "spritesheet": "objects/campfire.png",
+    "frameWidth": 32,
+    "frameHeight": 32,
+    "frameCount": 6,
+    "frameDuration": 100,
+    "loop": true
+  }
+}

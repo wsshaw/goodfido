@@ -1,0 +1,10 @@
+{
+    "id": 2,
+    "name": "gregory",
+    "sprite": "npc_gregory",
+    "roam": {
+      "rate": 0
+    },
+    "behaviorModule": "assets/npcs/behaviors/gregory.js"
+  }
+  

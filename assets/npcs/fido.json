@@ -1,0 +1,19 @@
+{
+  "id": 1,
+  "name": "fido",
+  "sprite": "npc_fido",
+  "description": "You see a small brown dog here.",
+  "roam": {
+  	"type": "random",
+	  "constrain": "zone",
+	  "frequency": 50,
+	  "maxDuration": 5,
+	  "minDuration": 1,
+    "rate": 0.4
+  },
+  "base_stats": {
+    "strength": 10,
+    "luck": 50
+  },
+  "behaviorModule": "assets/npcs/behaviors/fido.js"
+}
