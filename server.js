@@ -26,6 +26,108 @@ const crypto = require('crypto');
 
 // --- HTTP API server for world data ---
 
+// --- Input Validation Functions ---
+
+/**
+ * Validate edit request coordinates and terrain values
+ */
+function validateEditRequest(msg, roomJson) {
+  // Validate coordinates are integers
+  if (!Number.isInteger(msg.x) || !Number.isInteger(msg.y)) {
+    return { valid: false, error: 'Coordinates must be integers' };
+  }
+  
+  // Validate coordinates are non-negative
+  if (msg.x < 0 || msg.y < 0) {
+    return { valid: false, error: 'Coordinates must be non-negative' };
+  }
+  
+  // Validate coordinates are within room bounds
+  if (!roomJson.tiles[msg.y] || !roomJson.tiles[msg.y][msg.x]) {
+    return { valid: false, error: 'Coordinates out of room bounds' };
+  }
+  
+  // Validate terrain string (alphanumeric, underscore, hyphen only)
+  if (msg.terrain && (typeof msg.terrain !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(msg.terrain))) {
+    return { valid: false, error: 'Invalid terrain value' };
+  }
+  
+  return { valid: true };
+}
+
+/**
+ * Validate room resize dimensions
+ */
+function validateResizeRequest(msg) {
+  if (!Number.isInteger(msg.width) || !Number.isInteger(msg.height)) {
+    return { valid: false, error: 'Dimensions must be integers' };
+  }
+  
+  if (msg.width < 1 || msg.height < 1) {
+    return { valid: false, error: 'Dimensions must be at least 1x1' };
+  }
+  
+  if (msg.width > 100 || msg.height > 100) {
+    return { valid: false, error: 'Dimensions too large (max 100x100)' };
+  }
+  
+  return { valid: true };
+}
+
+/**
+ * Validate and sanitize roomId to prevent path traversal
+ */
+function validateRoomId(roomId) {
+  // Must be integer or integer string
+  const parsed = parseInt(roomId, 10);
+  if (isNaN(parsed) || parsed < 0) {
+    return { valid: false, error: 'Invalid room ID' };
+  }
+  
+  // Convert to string and check for path traversal attempts
+  const roomIdStr = parsed.toString();
+  if (roomIdStr.includes('.') || roomIdStr.includes('/') || roomIdStr.includes('\\')) {
+    return { valid: false, error: 'Invalid room ID format' };
+  }
+  
+  return { valid: true, sanitized: parsed };
+}
+
+/**
+ * Validate tile exits structure
+ */
+function validateTileExits(tileExits) {
+  if (tileExits === null || tileExits === undefined) {
+    return { valid: true }; // null means delete exits
+  }
+  
+  if (typeof tileExits !== 'object' || Array.isArray(tileExits)) {
+    return { valid: false, error: 'Tile exits must be an object' };
+  }
+  
+  const validDirections = ['up', 'down', 'left', 'right'];
+  
+  for (const [direction, exit] of Object.entries(tileExits)) {
+    if (!validDirections.includes(direction)) {
+      return { valid: false, error: `Invalid exit direction: ${direction}` };
+    }
+    
+    if (!exit || typeof exit !== 'object') {
+      return { valid: false, error: 'Exit must be an object' };
+    }
+    
+    if (!Number.isInteger(exit.roomId) || !Number.isInteger(exit.x) || !Number.isInteger(exit.y)) {
+      return { valid: false, error: 'Exit coordinates must be integers' };
+    }
+    
+    if (exit.roomId < 0 || exit.x < 0 || exit.y < 0) {
+      return { valid: false, error: 'Exit coordinates must be non-negative' };
+    }
+  }
+  
+  return { valid: true };
+}
+
 // --- Game time state ---
 const stateFile = path.join(__dirname, 'state.json');
 let gameTime = { tick: 0, hour: 0, day: 0 };
@@ -838,7 +940,15 @@ wss.on('connection', (ws) => {
             ws.send(JSON.stringify({ type: 'error', message: 'Insufficient privileges' }));
             return;
           }
-          const { roomId, x, y, terrain } = msg;
+          
+          // Validate roomId
+          const roomIdValidation = validateRoomId(msg.roomId);
+          if (!roomIdValidation.valid) {
+            ws.send(JSON.stringify({ type: 'error', message: roomIdValidation.error }));
+            return;
+          }
+          const roomId = roomIdValidation.sanitized;
+          
           // Load the room JSON file
           const zoneId = msg.zoneId !== undefined ? msg.zoneId : 0;
           const zoneDef = worldData.zones[zoneId];
@@ -854,13 +964,16 @@ wss.on('connection', (ws) => {
             ws.send(JSON.stringify({ type: 'error', message: 'Failed to load room data' }));
             return;
           }
-          // Validate coordinates
-          if (!roomJson.tiles[y] || !roomJson.tiles[y][x]) {
-            ws.send(JSON.stringify({ type: 'error', message: 'Invalid tile coordinates' }));
+          
+          // Validate edit request
+          const validation = validateEditRequest(msg, roomJson);
+          if (!validation.valid) {
+            ws.send(JSON.stringify({ type: 'error', message: validation.error }));
             return;
           }
+          
           // Apply the terrain change
-          roomJson.tiles[y][x].terrain = terrain;
+          roomJson.tiles[msg.y][msg.x].terrain = msg.terrain;
           // Persist back to disk
           fs.writeFileSync(roomFile, JSON.stringify(roomJson, null, 2));
           // Broadcast the edit to all clients
@@ -884,7 +997,22 @@ wss.on('connection', (ws) => {
             ws.send(JSON.stringify({ type: 'error', message: 'Insufficient privileges' }));
             return;
           }
-          const { roomId, x, y, tileExits } = msg;
+          
+          // Validate roomId
+          const roomIdValidation = validateRoomId(msg.roomId);
+          if (!roomIdValidation.valid) {
+            ws.send(JSON.stringify({ type: 'error', message: roomIdValidation.error }));
+            return;
+          }
+          const roomId = roomIdValidation.sanitized;
+          
+          // Validate tile exits structure
+          const exitsValidation = validateTileExits(msg.tileExits);
+          if (!exitsValidation.valid) {
+            ws.send(JSON.stringify({ type: 'error', message: exitsValidation.error }));
+            return;
+          }
+          
           const zoneId = msg.zoneId !== undefined ? msg.zoneId : 0;
           const zoneDef = worldData.zones[zoneId];
           if (!zoneDef) {
@@ -900,16 +1028,19 @@ wss.on('connection', (ws) => {
             ws.send(JSON.stringify({ type: 'error', message: 'Failed to load room data' }));
             return;
           }
-          // Validate coordinates
-          if (!roomJson.tiles[y] || !roomJson.tiles[y][x]) {
-            ws.send(JSON.stringify({ type: 'error', message: 'Invalid tile coordinates' }));
+          
+          // Validate coordinates using existing function
+          const coordValidation = validateEditRequest(msg, roomJson);
+          if (!coordValidation.valid) {
+            ws.send(JSON.stringify({ type: 'error', message: coordValidation.error }));
             return;
           }
+          
           // Apply tileExits update (null means delete)
-          if (tileExits === null) {
-            delete roomJson.tiles[y][x].tileExits;
+          if (msg.tileExits === null) {
+            delete roomJson.tiles[msg.y][msg.x].tileExits;
           } else {
-            roomJson.tiles[y][x].tileExits = tileExits;
+            roomJson.tiles[msg.y][msg.x].tileExits = msg.tileExits;
           }
           // Persist back to disk
           fs.writeFileSync(roomFile, JSON.stringify(roomJson, null, 2));
@@ -935,7 +1066,24 @@ wss.on('connection', (ws) => {
             ws.send(JSON.stringify({ type: 'error', message: 'Insufficient privileges' }));
             return;
           }
-          const { roomId, width: newW, height: newH } = msg;
+          
+          // Validate roomId
+          const roomIdValidation = validateRoomId(msg.roomId);
+          if (!roomIdValidation.valid) {
+            ws.send(JSON.stringify({ type: 'error', message: roomIdValidation.error }));
+            return;
+          }
+          const roomId = roomIdValidation.sanitized;
+          
+          // Validate resize dimensions
+          const resizeValidation = validateResizeRequest(msg);
+          if (!resizeValidation.valid) {
+            ws.send(JSON.stringify({ type: 'error', message: resizeValidation.error }));
+            return;
+          }
+          
+          const newW = msg.width;
+          const newH = msg.height;
           const zoneId = msg.zoneId !== undefined ? msg.zoneId : 0;
           const zoneDef = worldData.zones[zoneId];
           if (!zoneDef) {
