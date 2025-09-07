@@ -28,6 +28,7 @@ import {
   ws,
   zone,
 } from './client_main.js';
+import { createInventoryContextMenu } from './ui-components.js';
 
 let editGridGraphics = null;
 let tileHighlight = null;
@@ -71,73 +72,16 @@ export function updateInventoryUI() {
 
 /**
  * Draw a simple right-click menu for an inventory item (Examine / Drop).
- * Positions at client (x,y) and self-cleans on outside click.
+ * Now uses the decoupled ContextMenu component.
  * Emits: { type:'drop', instanceId, zone, roomId, x, y }.
  */
 export function showInventoryContextMenu(instance, x, y) {
-  // Ensure only one inventory menu exists at a time
-  const old = document.getElementById('inventory-menu');
-  if (old) old.remove();
-  // create menu container
-  const menu = document.createElement('div');
-  menu.id = 'inventory-menu';
-  // TODO: so much of this styling stuff needs to be outside of the logic. Big debt
-  // but put a pin in it for speed
-  Object.assign(menu.style, {
-    position: 'absolute',
-    left: x + 'px',
-    top: y + 'px',
-    background: '#333',
-    color: '#fff',
-    border: '2px solid #444',
-    borderRadius: '8px',
-    padding: '4px',
-    zIndex: 10000,
-    cursor: 'default',
+  return createInventoryContextMenu(instance, x, y, {
+    playerTiles,
+    playerId,
+    zone,
+    ws
   });
-  // examine option
-  const examine = document.createElement('div');
-  examine.textContent = 'Examine';
-  examine.style.padding = '4px';
-  examine.style.cursor = 'pointer';
-  examine.addEventListener('click', () => {
-    // Placeholder: wire to server/inspector logic if desired
-    // TODO: implement actual examine logic ...
-    menu.remove();
-  });
-  menu.appendChild(examine);
-  // drop option
-  const drop = document.createElement('div');
-  drop.textContent = 'Drop';
-  drop.style.padding = '4px';
-  drop.style.cursor = 'pointer';
-  drop.addEventListener('click', () => {
-    // Drop at the player's current tile (server will validate and broadcast)
-    // send drop to server at player's current tile
-    const pd = playerTiles[playerId];
-    ws.send(
-      JSON.stringify({
-        type: 'drop',
-        instanceId: instance.instanceId,
-        zone: zone.currentRoomX,
-        roomId: zone.currentRoomY,
-        x: pd.tileX,
-        y: pd.tileY,
-      })
-    );
-    menu.remove();
-  });
-  menu.appendChild(drop);
-  document.body.appendChild(menu);
-  // click outside to close (deferred so opening click isn't caught)
-  setTimeout(() => {
-    document.addEventListener('click', function handler(e) {
-      if (!menu.contains(e.target)) {
-        menu.remove();
-        document.removeEventListener('click', handler);
-      }
-    });
-  }, 0);
 }
 
 /**
