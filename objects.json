@@ -1,6 +1,23 @@
-[
-  { "path": "assets/objects/tree.json" },
-  { "path": "assets/objects/rock.json" },
-  { "path": "assets/objects/chest.json" },
-  { "path": "assets/objects/bush.json" }
-]
+{
+  "rock": {
+    "id": 1,
+    "name": "Rock",
+    "sprite": "obj_Boulder"
+  },
+  "tree": {
+    "id": 2,
+    "name": "Tree"
+  },
+  "chest": {
+    "id": 3,
+    "name": "Treasure Chest"
+  },
+  "bush": {
+    "id": 4,
+    "name": "Bush",
+    "sprite": "obj_Bush",
+    "animated": true,
+    "frameCount": 4,
+    "frameRate": 4
+  }
+}

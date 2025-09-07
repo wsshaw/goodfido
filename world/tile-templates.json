@@ -1,0 +1,31 @@
+{
+  "templates": {
+    "grass": {
+      "terrain": "grass"
+    },
+    "water": {
+      "terrain": "water"
+    },
+    "road": {
+      "terrain": "road"
+    },
+    "grassWithPhysics": {
+      "terrain": "grass",
+      "properties": {
+        "physicsRule": "grassTileProperties"
+      }
+    },
+    "roadWithPhysics": {
+      "terrain": "road",
+      "properties": {
+        "physicsRule": "roadTileProperties"
+      }
+    },
+    "grassWithFriction": {
+      "terrain": "grass",
+      "properties": {
+        "friction": 0.1
+      }
+    }
+  }
+}
