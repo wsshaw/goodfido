@@ -26,6 +26,84 @@ const crypto = require('crypto');
 
 // --- HTTP API server for world data ---
 
+// --- Error Handling and Logging ---
+
+/**
+ * Centralized error logging with categories and context
+ */
+function logError(category, error, context = {}) {
+  const timestamp = new Date().toISOString();
+  const errorMessage = error?.message || error || 'Unknown error';
+  console.error(`[${timestamp}] ${category}:`, errorMessage, Object.keys(context).length ? context : '');
+}
+
+/**
+ * Safe file write wrapper with error handling
+ */
+function safeFileWrite(filePath, data) {
+  try {
+    fs.writeFileSync(filePath, data);
+    return { success: true };
+  } catch (error) {
+    logError('FILE_WRITE', error, { filePath });
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Safe file read wrapper with error handling
+ */
+function safeFileRead(filePath) {
+  try {
+    const data = fs.readFileSync(filePath, 'utf8');
+    return { success: true, data };
+  } catch (error) {
+    logError('FILE_READ', error, { filePath });
+    return { success: false, error: error.message };
+  }
+}
+
+// --- Timer Management for NPC Movement ---
+
+// Track active NPC movement timers to prevent memory leaks
+const npcTimers = new Map(); // instanceId -> timeoutId
+
+/**
+ * Start an NPC movement timer with cleanup tracking
+ */
+function startNpcMovementTimer(instanceId, callback, delay) {
+  // Clear any existing timer for this NPC
+  clearNpcMovementTimer(instanceId);
+  
+  const timerId = setTimeout(() => {
+    npcTimers.delete(instanceId);
+    callback();
+  }, delay);
+  
+  npcTimers.set(instanceId, timerId);
+}
+
+/**
+ * Clear NPC movement timer
+ */
+function clearNpcMovementTimer(instanceId) {
+  const timerId = npcTimers.get(instanceId);
+  if (timerId) {
+    clearTimeout(timerId);
+    npcTimers.delete(instanceId);
+  }
+}
+
+/**
+ * Clear all NPC timers (cleanup on shutdown)
+ */
+function clearAllNpcTimers() {
+  for (const [instanceId, timerId] of npcTimers) {
+    clearTimeout(timerId);
+  }
+  npcTimers.clear();
+}
+
 // --- Input Validation Functions ---
 
 /**
@@ -974,8 +1052,12 @@ wss.on('connection', (ws) => {
           
           // Apply the terrain change
           roomJson.tiles[msg.y][msg.x].terrain = msg.terrain;
-          // Persist back to disk
-          fs.writeFileSync(roomFile, JSON.stringify(roomJson, null, 2));
+          // Persist back to disk with error handling
+          const writeResult = safeFileWrite(roomFile, JSON.stringify(roomJson, null, 2));
+          if (!writeResult.success) {
+            ws.send(JSON.stringify({ type: 'error', message: 'Failed to save room changes' }));
+            return;
+          }
           // Broadcast the edit to all clients
           for (const client of clients.values()) {
             if (client.readyState === WebSocket.OPEN) {
@@ -1042,8 +1124,12 @@ wss.on('connection', (ws) => {
           } else {
             roomJson.tiles[msg.y][msg.x].tileExits = msg.tileExits;
           }
-          // Persist back to disk
-          fs.writeFileSync(roomFile, JSON.stringify(roomJson, null, 2));
+          // Persist back to disk with error handling
+          const writeResult = safeFileWrite(roomFile, JSON.stringify(roomJson, null, 2));
+          if (!writeResult.success) {
+            ws.send(JSON.stringify({ type: 'error', message: 'Failed to save tile exits' }));
+            return;
+          }
           // Broadcast the edit to all clients
           for (const client of clients.values()) {
             if (client.readyState === WebSocket.OPEN) {
@@ -1126,8 +1212,12 @@ wss.on('connection', (ws) => {
           // Update metadata
           roomJson.width = newW;
           roomJson.height = newH;
-          // Persist back to disk
-          fs.writeFileSync(roomFile, JSON.stringify(roomJson, null, 2));
+          // Persist back to disk with error handling
+          const writeResult = safeFileWrite(roomFile, JSON.stringify(roomJson, null, 2));
+          if (!writeResult.success) {
+            ws.send(JSON.stringify({ type: 'error', message: 'Failed to save room resize' }));
+            return;
+          }
           // Broadcast the resize to all clients
           for (const client of clients.values()) {
             if (client.readyState === WebSocket.OPEN) {
@@ -1143,18 +1233,32 @@ wss.on('connection', (ws) => {
           }
         }
       } catch (e) {
-        //console.error('Bad message:', );
+        logError('MESSAGE_PARSE', e, { 
+          clientId: id, 
+          playerName: nameMap.get(id),
+          rawMessage: message.toString().substring(0, 200) // First 200 chars for debugging
+        });
+        // Send error response to client
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ 
+            type: 'error', 
+            message: 'Invalid message format' 
+          }));
+        }
       }
     });
 
     ws.on('close', () => {
+      // Clean up any NPC timers for this player (if they were controlling NPCs)
+      // Note: This is more for safety - in practice NPCs are server-controlled
+      
       // Persist player snapshot + notify others.
       const data = positions.get(id);
       if (data) {
         try {
           savePlayerData(data);
         } catch (err) {
-          console.error(`Failed to save player ${data.name}:`, err);
+          logError('PLAYER_SAVE', err, { playerId: id, playerName: data.name });
         }
       }
       clients.delete(id);
@@ -1306,7 +1410,8 @@ setInterval(() => {
           const totalTiles = path.length - 1;
           const totalMs = totalTiles * segmentDuration;
 
-          setTimeout(() => {
+          // Use managed timer to prevent memory leaks
+          startNpcMovementTimer(npc.instanceId, () => {
             // update official position
             const [tx, ty] = path[path.length - 1];
             npc.x = tx;
@@ -1343,4 +1448,67 @@ setInterval(() => {
     }
   });
 }, 1000);
+
+// --- Graceful Shutdown Handling ---
+
+/**
+ * Clean shutdown procedure
+ */
+function gracefulShutdown(signal) {
+  console.log(`\nReceived ${signal}. Starting graceful shutdown...`);
+  
+  // Clear all NPC movement timers to prevent memory leaks
+  clearAllNpcTimers();
+  
+  // Close WebSocket server
+  wss.close((err) => {
+    if (err) {
+      logError('SHUTDOWN', err, { phase: 'websocket_close' });
+    } else {
+      console.log('WebSocket server closed.');
+    }
+  });
+  
+  // Close HTTP server
+  server.close((err) => {
+    if (err) {
+      logError('SHUTDOWN', err, { phase: 'http_close' });
+    } else {
+      console.log('HTTP server closed.');
+    }
+    
+    // Save final state
+    try {
+      console.log('Saving final game state...');
+      fs.writeFileSync(stateFile, JSON.stringify(gameTime, null, 2));
+      console.log('Game state saved successfully.');
+    } catch (error) {
+      logError('SHUTDOWN', error, { phase: 'final_state_save' });
+    }
+    
+    console.log('Graceful shutdown complete.');
+    process.exit(0);
+  });
+  
+  // Force exit after 10 seconds if graceful shutdown fails
+  setTimeout(() => {
+    console.error('Forceful shutdown after timeout');
+    process.exit(1);
+  }, 10000);
+}
+
+// Register shutdown handlers
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  logError('UNCAUGHT_EXCEPTION', error, { fatal: true });
+  gracefulShutdown('UNCAUGHT_EXCEPTION');
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  logError('UNHANDLED_REJECTION', reason, { promise: promise.toString() });
+});
+
 // End of server.js
